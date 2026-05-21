@@ -1,223 +1,506 @@
+
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ropa.Ponte</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <title>Calendario Minimalista</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #ffffff;
-            --text-color: #000000;
-            --accent-color: #f0f0f0;
-            --shimmer-start: #000000;
-            --shimmer-mid: #A0A0A0;
+            --bg-color: #f4f5f7;
+            --surface-color: #ffffff;
+            --text-color: #3c4043;
+            --text-muted: #70757a;
+            --border-color: #dadce0;
+            --hover-color: #e8eaed;
+            --font-main: 'Montserrat', sans-serif;
+            --transition-fast: 0.2s ease;
+            --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .dark {
-            --bg-color: #121212;
-            --text-color: #ffffff;
-            --accent-color: #1e1e1e;
-            --shimmer-start: #ffffff;
-            --shimmer-mid: #5E5E5E;
+        [data-theme="dark"] {
+            --bg-color: #18191a;
+            --surface-color: #242526;
+            --text-color: #e4e6eb;
+            --text-muted: #b0b3b8;
+            --border-color: #3a3b3c;
+            --hover-color: #3a3b3c;
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Montserrat', sans-serif;
+            font-family: var(--font-main);
             background-color: var(--bg-color);
             color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            transition: background-color 0.5s ease, color 0.5s ease;
-            overflow-x: hidden;
+            transition: background-color var(--transition-smooth), color var(--transition-smooth);
+            display: flex; flex-direction: column; 
+            height: 111.11vh; 
+            width: 111.11vw;  
+            transform: scale(0.9); 
+            transform-origin: top left;
+            overflow: hidden;
         }
 
-        header {
-            position: relative;
-            padding: 20px;
-            text-align: center;
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 40px; background-color: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color var(--transition-smooth), border-color var(--transition-smooth);
         }
 
-        h1 {
-            font-size: 3em;
-            text-transform: uppercase;
-            margin: 0;
-            position: relative;
-            display: inline-block;
-            background: linear-gradient(135deg, var(--shimmer-start), var(--shimmer-mid), var(--shimmer-start));
-            background-clip: text;
-            color: transparent;
-            background-size: 200% 100%;
-            animation: shimmer 5s linear infinite;
-        }
+        .month-selector { display: flex; align-items: center; gap: 15px; }
 
-        @keyframes shimmer {
-            0% {
-                background-position: 200% 0;
-            }
-            100% {
-                background-position: -200% 0;
-            }
-        }
+        h1 { font-weight: 500; font-size: 1.5rem; min-width: 200px; text-align: center; }
 
-        #toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 2em;
-            cursor: pointer;
-            transition: transform 0.5s ease;
+        .icon-btn {
+            background: none; border: none; color: var(--text-muted);
+            font-size: 1.2rem; cursor: pointer; padding: 10px; border-radius: 50%;
+            transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
         }
+        .icon-btn:hover { background-color: var(--hover-color); color: var(--text-color); }
 
-        #toggle:hover {
-            transform: scale(1.2);
+        .settings-container { position: relative; }
+        .gear-icon { transition: transform 0.4s ease; }
+        .settings-container.open .gear-icon { transform: rotate(90deg); }
+
+        .settings-dropdown {
+            position: absolute; right: 0; top: 100%; margin-top: 10px;
+            background: var(--surface-color); border: 1px solid var(--border-color);
+            border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            min-width: 260px; opacity: 0; transform: translateY(-10px) scale(0.95);
+            pointer-events: none; transition: opacity var(--transition-fast), transform var(--transition-fast);
+            z-index: 50; padding: 8px 0;
         }
+        .settings-container.open .settings-dropdown { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+        
+        .dropdown-item { padding: 12px 20px; font-size: 0.9rem; cursor: pointer; transition: background var(--transition-fast); }
+        .dropdown-item:hover { background: var(--hover-color); }
+        
+        .dropdown-section { padding: 12px 20px; border-top: 1px solid var(--border-color); }
+        .dropdown-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
 
-        section {
-            padding: 40px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeIn 1s forwards;
+        .calendar-container { flex: 1; padding: 20px 40px; display: flex; flex-direction: column; height: calc(100vh - 85px); }
+        .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: 500; color: var(--text-muted); padding-bottom: 10px; }
+
+        .calendar-grid {
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            grid-template-rows: repeat(5, 1fr); 
+            gap: 1px;
+            background-color: var(--border-color); border: 1px solid var(--border-color);
+            border-radius: 12px; overflow: hidden; flex: 1; transition: opacity var(--transition-smooth);
         }
+        .calendar-grid.fade { opacity: 0; transform: translateY(5px); }
 
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .day {
+            background-color: var(--surface-color); padding: 6px 4px; cursor: pointer;
+            transition: background-color var(--transition-fast); 
+            display: flex; flex-direction: column; 
+            align-items: stretch; 
+            gap: 3px;
+            overflow-y: auto; 
+            scrollbar-width: none; 
         }
-
-        section:nth-child(odd) {
-            animation-delay: 0.2s;
+        .day::-webkit-scrollbar { display: none; } 
+        .day:hover { background-color: var(--hover-color); }
+        
+        .day-number { 
+            font-size: 0.85rem; 
+            font-weight: 500; 
+            align-self: center; 
+            margin-bottom: 4px; 
+            color: var(--text-color); 
         }
+        .day.empty { background-color: var(--bg-color); cursor: default; }
 
-        section:nth-child(even) {
-            animation-delay: 0.4s;
-        }
-
-        h2 {
-            font-size: 2em;
-            text-align: center;
-            margin-bottom: 20px;
-            transition: color 0.3s ease;
-        }
-
-        .products {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .product {
-            background-color: var(--accent-color);
-            padding: 20px;
-            text-align: center;
-            border-radius: 8px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            width: 50%;
-            margin-bottom: 40px;
-        }
-
-        .product:nth-child(odd) {
-            align-self: flex-end;
-        }
-
-        .product:nth-child(even) {
-            align-self: flex-start;
-        }
-
-        .product:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .product img {
+        .event {
+            font-size: 0.75rem; color: #fff; padding: 4px 8px; border-radius: 4px;
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.2s, filter 0.2s;
             width: 100%;
-            height: auto;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            transition: opacity 0.3s ease;
+            display: block;
         }
+        .event:hover { transform: scale(1.01); filter: brightness(1.1); }
 
-        .product:hover img {
-            opacity: 0.9;
+        /* Modales */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px);
+            align-items: center; justify-content: center; opacity: 0; transition: opacity var(--transition-fast); z-index: 100;
         }
+        .modal.show { display: flex; opacity: 1; }
 
-        .product p {
-            margin: 5px 0;
+        .modal-content {
+            background-color: var(--surface-color); padding: 24px; border-radius: 16px; width: 350px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2); transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        .modal.show .modal-content { transform: scale(1); }
+        .modal-content.small { width: 300px; text-align: center; }
 
-        @media (max-width: 768px) {
-            .product {
-                width: 80%;
-            }
-            .product:nth-child(odd),
-            .product:nth-child(even) {
-                align-self: center;
-            }
+        .modal-content h2, .modal-content h3 { font-weight: 600; margin-bottom: 5px; }
+        .event-date-text { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; }
+
+        input[type="text"], input[type="time"] {
+            width: 100%; padding: 10px; margin-bottom: 15px; border: none; border-bottom: 2px solid var(--border-color);
+            background: transparent; color: var(--text-color); font-family: var(--font-main); outline: none; transition: border-color var(--transition-fast);
         }
+        input[type="text"]:focus, input[type="time"]:focus { border-bottom-color: #4285f4; }
+
+        .color-picker { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .color-option { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; transition: transform 0.2s; border: 1px solid rgba(0,0,0,0.1); }
+        .color-option.selected { transform: scale(1.3); box-shadow: 0 0 0 2px var(--surface-color), 0 0 0 4px var(--text-color); }
+
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+        .modal-content.small .modal-actions { justify-content: center; flex-wrap: wrap; }
+
+        .btn-text, .btn-primary, .btn-danger {
+            padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer;
+            font-family: var(--font-main); font-weight: 500; transition: background-color var(--transition-fast), transform var(--transition-fast);
+        }
+        .btn-text { background: transparent; color: var(--text-muted); }
+        .btn-text:hover { background: var(--hover-color); }
+        .btn-primary { background: #4285f4; color: white; }
+        .btn-primary:hover { background: #3367d6; transform: translateY(-1px); }
+        .btn-danger { background: #ea4335; color: white; }
+        .btn-danger:hover { background: #d33426; transform: translateY(-1px); }
+
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Ropa.Ponte</h1>
-        <div id="toggle">☀️</div>
+    <header class="header">
+        <div class="month-selector">
+            <button id="prevMonth" class="icon-btn">&#10094;</button>
+            <h1 id="monthDisplay">Mes Año</h1>
+            <button id="nextMonth" class="icon-btn">&#10095;</button>
+        </div>
+        
+        <div class="settings-container" id="settingsContainer">
+            <button id="settingsBtn" class="icon-btn gear-icon" title="Configuración">
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+            <div class="settings-dropdown">
+                <div class="dropdown-item" id="themeToggleBtn">Modo Claro / Oscuro</div>
+                <div class="dropdown-item" id="importIcsMenuBtn">Importar calendario (.ics)</div>
+                <div class="dropdown-item" id="clearAllBtn">Borrar todos los eventos</div>
+                <div class="dropdown-section">
+                    <div class="dropdown-label">Color predeterminado:</div>
+                    <div class="color-picker" id="defaultColorPicker">
+                        <div class="color-option" style="background: #4285f4;" data-color="#4285f4"></div>
+                        <div class="color-option" style="background: #ea4335;" data-color="#ea4335"></div>
+                        <div class="color-option" style="background: #fbbc04;" data-color="#fbbc04"></div>
+                        <div class="color-option" style="background: #34a853;" data-color="#34a853"></div>
+                        <div class="color-option" style="background: #3c4043;" data-color="#3c4043"></div>
+                        <div class="color-option" style="background: #8e24aa;" data-color="#8e24aa"></div>
+                        <div class="color-option" style="background: #00acc1;" data-color="#00acc1"></div>
+                    </div>
+                </div>
+            </div>
+            <input type="file" id="icsFileInput" accept=".ics" style="display: none;">
+        </div>
     </header>
 
-    <section id="ralph-lauren">
-        <h2>Ralph Lauren</h2>
-        <div class="products">
-            <div class="product">
-                <img src="https://i.ebayimg.com/images/g/B7cAAOSwesdlP-5D/s-l400.jpg" alt="Camiseta Clásica Polo">
-                <p>Camiseta Clásica Polo</p>
-                <p>$40</p>
-            </div>
-            <div class="product">
-                <img src="https://images.asos-media.com/products/polo-ralph-lauren-t-shirt-with-central-pony-logo-in-black/203092282-1-black?$n_640w$&wid=513&fit=constrain" alt="Camiseta con Logo">
-                <p>Camiseta con Logo</p>
-                <p>$40</p>
-            </div>
-            <!-- Añade más productos según necesites -->
+    <main class="calendar-container">
+        <div class="weekdays">
+            <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
         </div>
-    </section>
+        <div id="calendar" class="calendar-grid"></div>
+    </main>
 
-    <section id="ami">
-        <h2>Ami</h2>
-        <div class="products">
-            <div class="product">
-                <img src="https://www.mytheresa.com/media/1094/1238/100/62/P00832206.jpg" alt="Camiseta Ami Paris">
-                <p>Camiseta Ami Paris</p>
-                <p>$45</p>
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalMainTitle">Nuevo Evento</h2>
+            <p id="eventDateDisplay" class="event-date-text"></p>
+            <input type="text" id="eventTitle" placeholder="Añade un título" autocomplete="off">
+            <input type="time" id="eventTime">
+            <div class="color-picker" id="modalColorPicker">
+                <div class="color-option" style="background: #4285f4;" data-color="#4285f4"></div>
+                <div class="color-option" style="background: #ea4335;" data-color="#ea4335"></div>
+                <div class="color-option" style="background: #fbbc04;" data-color="#fbbc04"></div>
+                <div class="color-option" style="background: #34a853;" data-color="#34a853"></div>
+                <div class="color-option" style="background: #3c4043;" data-color="#3c4043"></div>
+                <div class="color-option" style="background: #8e24aa;" data-color="#8e24aa"></div>
+                <div class="color-option" style="background: #00acc1;" data-color="#00acc1"></div>
             </div>
-            <div class="product">
-                <img src="https://cdn-images.farfetch-contents.com/30/09/64/01/30096401_59121895_1000.jpg" alt="Sudadera Ami">
-                <p>Sudadera Ami</p>
-                <p>$45</p>
+            <div class="modal-actions">
+                <button id="cancelBtn" class="btn-text">Cancelar</button>
+                <button id="saveBtn" class="btn-primary">Guardar</button>
             </div>
-            <!-- Añade más productos según necesites -->
         </div>
-    </section>
+    </div>
+
+    <div id="actionModal" class="modal">
+        <div class="modal-content small">
+            <h3 id="actionEventTitle">Título del evento</h3>
+            <p id="actionEventTime" class="event-date-text"></p>
+            <div class="modal-actions">
+                <button id="deleteEventBtn" class="btn-danger">Eliminar</button>
+                <button id="editEventBtn" class="btn-primary">Editar</button>
+                <button id="closeActionBtn" class="btn-text" style="width: 100%;">Cerrar</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        const toggle = document.getElementById('toggle');
-        toggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark');
-            if (document.body.classList.contains('dark')) {
-                toggle.style.transform = 'rotate(180deg)';
-                setTimeout(() => {
-                    toggle.textContent = '🌙';
-                    toggle.style.transform = 'rotate(0deg)';
-                }, 250);
-            } else {
-                toggle.style.transform = 'rotate(180deg)';
-                setTimeout(() => {
-                    toggle.textContent = '☀️';
-                    toggle.style.transform = 'rotate(0deg)';
-                }, 250);
+        const calendar = document.getElementById('calendar');
+        const monthDisplay = document.getElementById('monthDisplay');
+        const settingsContainer = document.getElementById('settingsContainer');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const eventModal = document.getElementById('eventModal');
+        const modalMainTitle = document.getElementById('modalMainTitle');
+        const eventTitle = document.getElementById('eventTitle');
+        const eventTime = document.getElementById('eventTime');
+        const eventDateDisplay = document.getElementById('eventDateDisplay');
+        const actionModal = document.getElementById('actionModal');
+        const actionEventTitle = document.getElementById('actionEventTitle');
+        const actionEventTime = document.getElementById('actionEventTime');
+        const icsFileInput = document.getElementById('icsFileInput');
+
+        const modalColors = document.querySelectorAll('#modalColorPicker .color-option');
+        const defaultColors = document.querySelectorAll('#defaultColorPicker .color-option');
+
+        let currentDate = new Date();
+        let selectedDate = null;
+        let editingIndex = null;
+        
+        let defaultColor = localStorage.getItem('calendarDefaultColor') || '#4285f4';
+        let selectedColor = defaultColor;
+        let isColorManuallyPicked = false; 
+        let events = JSON.parse(localStorage.getItem('calendarEvents')) || {};
+
+        const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+        function initDefaultColorPicker() {
+            defaultColors.forEach(opt => {
+                if (opt.getAttribute('data-color') === defaultColor) opt.classList.add('selected');
+                opt.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    defaultColors.forEach(o => o.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    defaultColor = e.target.getAttribute('data-color');
+                    localStorage.setItem('calendarDefaultColor', defaultColor);
+                    renderCalendar(); 
+                });
+            });
+        }
+
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        // Evento para navegar con las flechas del teclado
+        document.addEventListener('keydown', (e) => {
+            // Si el usuario está escribiendo dentro de los campos del modal, no cambia de mes
+            if (document.activeElement.tagName === 'INPUT') return;
+
+            if (e.key === 'ArrowLeft') {
+                changeMonth(-1);
+            } else if (e.key === 'ArrowRight') {
+                changeMonth(1);
             }
         });
+
+        function renderCalendar() {
+            calendar.classList.add('fade');
+            setTimeout(() => {
+                calendar.innerHTML = '';
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                monthDisplay.textContent = `${months[month]} ${year}`;
+                
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                
+                const totalCellsNeeded = firstDay + daysInMonth;
+                calendar.style.gridTemplateRows = totalCellsNeeded > 35 ? 'repeat(6, 1fr)' : 'repeat(5, 1fr)';
+                
+                for (let i = 0; i < firstDay; i++) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.classList.add('day', 'empty');
+                    calendar.appendChild(emptyDiv);
+                }
+                
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.classList.add('day');
+                    const dayString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                    
+                    const dayNumber = document.createElement('span');
+                    dayNumber.classList.add('day-number');
+                    dayNumber.textContent = i;
+                    dayDiv.appendChild(dayNumber);
+                    
+                    if (events[dayString]) {
+                        events[dayString].forEach((evt, index) => {
+                            const eventDiv = document.createElement('div');
+                            eventDiv.classList.add('event');
+                            eventDiv.style.backgroundColor = evt.isManualColor ? evt.color : defaultColor;
+                            eventDiv.textContent = `${evt.time ? evt.time + ' ' : ''}${evt.title}`;
+                            eventDiv.title = evt.title; 
+                            eventDiv.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                openActionModal(dayString, index, evt);
+                            });
+                            dayDiv.appendChild(eventDiv);
+                        });
+                    }
+                    dayDiv.addEventListener('click', () => openCreateModal(dayString));
+                    calendar.appendChild(dayDiv);
+                }
+                calendar.classList.remove('fade');
+            }, 200);
+        }
+
+        modalColors.forEach(option => {
+            option.addEventListener('click', (e) => {
+                modalColors.forEach(opt => opt.classList.remove('selected'));
+                e.target.classList.add('selected');
+                selectedColor = e.target.getAttribute('data-color');
+                isColorManuallyPicked = true; 
+            });
+        });
+
+        function openCreateModal(dateStr) {
+            selectedDate = dateStr; editingIndex = null;
+            modalMainTitle.textContent = "Nuevo Evento";
+            eventDateDisplay.textContent = `Fecha: ${dateStr}`;
+            eventTitle.value = ''; eventTime.value = '';
+            isColorManuallyPicked = false; 
+            setColorSelection(defaultColor); eventModal.classList.add('show');
+        }
+
+        function openActionModal(dateStr, index, evt) {
+            selectedDate = dateStr; editingIndex = index;
+            actionEventTitle.textContent = evt.title;
+            actionEventTime.textContent = evt.time ? `Hora: ${evt.time}` : 'Todo el día';
+            actionModal.classList.add('show');
+        }
+
+        function setColorSelection(hex) {
+            selectedColor = hex;
+            modalColors.forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.getAttribute('data-color') === hex) opt.classList.add('selected');
+            });
+        }
+
+        document.getElementById('importIcsMenuBtn').addEventListener('click', () => {
+            settingsContainer.classList.remove('open');
+            icsFileInput.click();
+        });
+
+        icsFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) { parseICSAndSave(event.target.result); icsFileInput.value = ""; };
+            reader.readAsText(file);
+        });
+
+        function parseICSAndSave(icsData) {
+            const lines = icsData.split(/\r\n|\n|\r/);
+            let currentEvent = null; let importedCount = 0;
+            for (let line of lines) {
+                line = line.trim();
+                if (line.startsWith('BEGIN:VEVENT')) { currentEvent = {}; }
+                else if (line.startsWith('END:VEVENT') && currentEvent) {
+                    if (currentEvent.date && currentEvent.title) {
+                        if (!events[currentEvent.date]) events[currentEvent.date] = [];
+                        const exists = events[currentEvent.date].some(e => e.title === currentEvent.title && e.time === (currentEvent.time || ''));
+                        if (!exists) {
+                            events[currentEvent.date].push({ 
+                                title: currentEvent.title, 
+                                time: currentEvent.time || '', 
+                                color: defaultColor,
+                                isManualColor: false 
+                            });
+                            events[currentEvent.date].sort((a, b) => a.time.localeCompare(b.time));
+                            importedCount++;
+                        }
+                    }
+                    currentEvent = null;
+                } else if (currentEvent) {
+                    if (line.startsWith('SUMMARY:')) { currentEvent.title = line.substring(8).replace(/\\,/g, ','); }
+                    else if (line.startsWith('DTSTART')) {
+                        const valuePart = line.split(':')[1];
+                        if (valuePart) {
+                            currentEvent.date = `${valuePart.substring(0, 4)}-${valuePart.substring(4, 6)}-${valuePart.substring(6, 8)}`;
+                            if (valuePart.includes('T')) {
+                                const tIndex = valuePart.indexOf('T');
+                                currentEvent.time = `${valuePart.substring(tIndex + 1, tIndex + 3)}:${valuePart.substring(tIndex + 3, tIndex + 5)}`;
+                            }
+                        }
+                    }
+                }
+            }
+            if (importedCount > 0) { localStorage.setItem('calendarEvents', JSON.stringify(events)); renderCalendar(); alert(`¡Se han importado ${importedCount} eventos!`); }
+            else { alert('No se encontraron nuevos eventos.'); }
+        }
+
+        document.getElementById('prevMonth').addEventListener('click', () => changeMonth(-1));
+        document.getElementById('nextMonth').addEventListener('click', () => changeMonth(1));
+        
+        settingsBtn.addEventListener('click', (e) => { e.stopPropagation(); settingsContainer.classList.toggle('open'); });
+        document.addEventListener('click', (e) => { if (!settingsContainer.contains(e.target)) settingsContainer.classList.remove('open'); });
+        
+        document.getElementById('themeToggleBtn').addEventListener('click', () => {
+            const html = document.documentElement;
+            html.getAttribute('data-theme') === 'dark' ? html.removeAttribute('data-theme') : html.setAttribute('data-theme', 'dark');
+            settingsContainer.classList.remove('open');
+        });
+
+        document.getElementById('clearAllBtn').addEventListener('click', () => {
+            if(confirm('¿Seguro que quieres eliminar todos los eventos?')) { events = {}; localStorage.removeItem('calendarEvents'); renderCalendar(); }
+            settingsContainer.classList.remove('open');
+        });
+
+        document.getElementById('closeActionBtn').addEventListener('click', () => actionModal.classList.remove('show'));
+        document.getElementById('deleteEventBtn').addEventListener('click', () => {
+            events[selectedDate].splice(editingIndex, 1);
+            if (events[selectedDate].length === 0) delete events[selectedDate];
+            localStorage.setItem('calendarEvents', JSON.stringify(events));
+            actionModal.classList.remove('show'); renderCalendar();
+        });
+
+        document.getElementById('editEventBtn').addEventListener('click', () => {
+            actionModal.classList.remove('show');
+            const evt = events[selectedDate][editingIndex];
+            modalMainTitle.textContent = "Editar Evento";
+            eventDateDisplay.textContent = `Fecha: ${selectedDate}`;
+            eventTitle.value = evt.title; eventTime.value = evt.time;
+            isColorManuallyPicked = evt.isManualColor || false;
+            setColorSelection(evt.isManualColor ? evt.color : defaultColor); eventModal.classList.add('show');
+        });
+
+        document.getElementById('cancelBtn').addEventListener('click', () => eventModal.classList.remove('show'));
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            if (eventTitle.value.trim() === '') return;
+            if (!events[selectedDate]) events[selectedDate] = [];
+            
+            const newEvent = { 
+                title: eventTitle.value, 
+                time: eventTime.value, 
+                color: selectedColor,
+                isManualColor: isColorManuallyPicked
+            };
+            
+            if (editingIndex !== null) events[selectedDate][editingIndex] = newEvent;
+            else events[selectedDate].push(newEvent);
+            
+            events[selectedDate].sort((a, b) => a.time.localeCompare(b.time));
+            localStorage.setItem('calendarEvents', JSON.stringify(events));
+            eventModal.classList.remove('show'); renderCalendar();
+        });
+
+        initDefaultColorPicker();
+        renderCalendar();
     </script>
 </body>
 </html>
