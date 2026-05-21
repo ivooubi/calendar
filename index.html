@@ -29,30 +29,59 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: var(--font-main);
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: var(--font-main); background-color: var(--bg-color); color: var(--text-color);
             transition: background-color var(--transition-smooth), color var(--transition-smooth);
-            display: flex; flex-direction: column; 
-            height: 111.11vh; width: 111.11vw; 
-            transform: scale(0.9); transform-origin: top left;
-            overflow: hidden;
+            display: flex; flex-direction: column; height: 111.11vh; width: 111.11vw; 
+            transform: scale(0.9); transform-origin: top left; overflow: hidden;
         }
+        
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 20px 40px; background-color: var(--surface-color);
-            border-bottom: 1px solid var(--border-color);
+            padding: 20px 40px; background-color: var(--surface-color); border-bottom: 1px solid var(--border-color);
             transition: background-color var(--transition-smooth), border-color var(--transition-smooth);
         }
-        .month-selector { display: flex; align-items: center; gap: 15px; }
-        h1 { font-weight: 500; font-size: 1.5rem; min-width: 200px; text-align: center; }
+        .month-selector { display: flex; align-items: center; gap: 15px; width: 260px; }
+        h1 { font-weight: 500; font-size: 1.5rem; min-width: 170px; text-align: center; }
+        
+        /* Barra de búsqueda */
+        .search-wrapper {
+            display: flex; align-items: center; background: var(--bg-color); 
+            border: 1px solid var(--border-color); border-radius: 20px; 
+            padding: 8px 16px; margin: 0 20px; flex: 1; max-width: 450px;
+            position: relative; transition: border-color var(--transition-fast);
+        }
+        .search-wrapper:focus-within { border-color: #4285f4; }
+        .search-icon { color: var(--text-muted); margin-right: 10px; flex-shrink: 0; }
+        .search-input { 
+            border: none; background: transparent; color: var(--text-color); 
+            font-family: var(--font-main); outline: none; width: 100%; font-size: 0.9rem;
+        }
+        .search-results {
+            position: absolute; top: 100%; left: 0; width: 100%; margin-top: 8px;
+            background: var(--surface-color); border: 1px solid var(--border-color);
+            border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            max-height: 300px; overflow-y: auto; z-index: 60; display: none; scrollbar-width: none;
+        }
+        .search-results::-webkit-scrollbar { display: none; }
+        .search-results.show { display: block; }
+        .search-item {
+            padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-color);
+            display: flex; flex-direction: column; gap: 4px; transition: background var(--transition-fast);
+        }
+        .search-item:last-child { border-bottom: none; }
+        .search-item:hover { background: var(--hover-color); }
+        .search-item-title { font-weight: 500; font-size: 0.9rem; color: var(--text-color); }
+        .search-item-date { font-size: 0.75rem; color: var(--text-muted); }
+
         .icon-btn {
-            background: none; border: none; color: var(--text-muted);
-            font-size: 1.2rem; cursor: pointer; padding: 10px; border-radius: 50%;
+            background: none; border: none; color: var(--text-muted); font-size: 1.2rem; 
+            cursor: pointer; padding: 10px; border-radius: 50%;
             transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
         }
         .icon-btn:hover { background-color: var(--hover-color); color: var(--text-color); }
-        .settings-container { position: relative; }
+        
+        /* Ajustes Dropdown */
+        .settings-container { position: relative; width: 260px; display: flex; justify-content: flex-end; }
         .gear-icon { transition: transform 0.4s ease; }
         .settings-container.open .gear-icon { transform: rotate(90deg); }
         .settings-dropdown {
@@ -68,14 +97,12 @@
         .dropdown-item:hover { background: var(--hover-color); }
         .dropdown-section { padding: 12px 20px; border-top: 1px solid var(--border-color); }
         .dropdown-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
-        
         .custom-select {
             width: 100%; padding: 8px 12px; background: var(--bg-color); color: var(--text-color);
             border: 1px solid var(--border-color); border-radius: 8px; font-family: var(--font-main);
             outline: none; cursor: pointer; transition: border-color var(--transition-fast);
         }
-        .custom-select:focus { border-color: #4285f4; }
-
+        
         .calendar-container { flex: 1; padding: 20px 40px; display: flex; flex-direction: column; height: calc(100vh - 85px); }
         .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: 500; color: var(--text-muted); padding-bottom: 10px; }
         .calendar-grid {
@@ -117,13 +144,12 @@
         .modal-content h2, .modal-content h3 { font-weight: 600; margin-bottom: 5px; }
         .event-date-text { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; }
 
-        input[type="text"] {
+        input[type="text"].modal-input {
             width: 100%; padding: 10px; margin-bottom: 15px; border: none; border-bottom: 2px solid var(--border-color);
             background: transparent; color: var(--text-color); font-family: var(--font-main); outline: none; transition: border-color var(--transition-fast);
         }
-        input[type="text"]:focus { border-bottom-color: #4285f4; }
+        input[type="text"].modal-input:focus { border-bottom-color: #4285f4; }
 
-        /* Custom Time Picker UI */
         .custom-time-wrapper { position: relative; margin-bottom: 15px; width: 100%; }
         .time-input-box {
             width: 100%; padding: 10px; border-bottom: 2px solid var(--border-color); background: transparent; 
@@ -132,17 +158,15 @@
         }
         .time-input-box:hover { border-bottom-color: #4285f4; }
         .clear-time-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; display: none; }
-        .clear-time-btn:hover { color: var(--text-color); }
         .time-dropdown {
             position: absolute; top: 100%; left: 0; width: 100%; height: 180px; background: var(--surface-color); 
             border: 1px solid var(--border-color); border-radius: 12px; display: flex; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            opacity: 0; transform: translateY(-10px); pointer-events: none; transition: opacity var(--transition-fast), transform var(--transition-fast);
+            opacity: 0; transform: translateY(-10px); pointer-events: none; transition: opacity var(--transition-fast);
             z-index: 10; overflow: hidden; margin-top: 5px;
         }
         .time-dropdown.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
         .time-col { flex: 1; overflow-y: auto; scrollbar-width: none; border-right: 1px solid var(--border-color); }
         .time-col:last-child { border-right: none; }
-        .time-col::-webkit-scrollbar { display: none; }
         .time-option { padding: 12px; text-align: center; cursor: pointer; transition: background var(--transition-fast); font-size: 0.9rem; }
         .time-option:hover { background: var(--hover-color); }
         .time-option.selected { background: #4285f4; color: white; font-weight: 600; }
@@ -154,14 +178,14 @@
         .modal-content.small .modal-actions { justify-content: center; flex-wrap: wrap; }
         .btn-text, .btn-primary, .btn-danger {
             padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer;
-            font-family: var(--font-main); font-weight: 500; transition: background-color var(--transition-fast), transform var(--transition-fast);
+            font-family: var(--font-main); font-weight: 500; transition: background-color var(--transition-fast);
         }
         .btn-text { background: transparent; color: var(--text-muted); }
         .btn-text:hover { background: var(--hover-color); }
         .btn-primary { background: #4285f4; color: white; }
-        .btn-primary:hover { background: #3367d6; transform: translateY(-1px); }
+        .btn-primary:hover { background: #3367d6; }
         .btn-danger { background: #ea4335; color: white; }
-        .btn-danger:hover { background: #d33426; transform: translateY(-1px); }
+        .btn-danger:hover { background: #d33426; }
         @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     </style>
 </head>
@@ -172,15 +196,22 @@
             <h1 id="monthDisplay">Mes Año</h1>
             <button id="nextMonth" class="icon-btn">&#10095;</button>
         </div>
+
+        <div class="search-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar evento..." autocomplete="off">
+            <div class="search-results" id="searchResults"></div>
+        </div>
+
         <div class="settings-container" id="settingsContainer">
             <button id="settingsBtn" class="icon-btn gear-icon" title="Configuración">
                 <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
             <div class="settings-dropdown">
                 <div class="dropdown-item" id="themeToggleBtn">Modo Claro / Oscuro</div>
-                <div class="dropdown-item" id="importIcsMenuBtn">Importar calendario (.ics)</div>
+                <div class="dropdown-item" id="importIcsMenuBtn">Importar .ics</div>
+                <div class="dropdown-item" id="exportIcsMenuBtn">Exportar .ics</div>
                 <div class="dropdown-item" id="clearAllBtn">Borrar todos los eventos</div>
-                
                 <div class="dropdown-section">
                     <div class="dropdown-label">La semana empieza el:</div>
                     <select id="startDaySelect" class="custom-select">
@@ -188,7 +219,6 @@
                         <option value="0">Domingo</option>
                     </select>
                 </div>
-
                 <div class="dropdown-section">
                     <div class="dropdown-label">Color predeterminado:</div>
                     <div class="color-picker" id="defaultColorPicker">
@@ -215,9 +245,7 @@
         <div class="modal-content">
             <h2 id="modalMainTitle">Nuevo Evento</h2>
             <p id="eventDateDisplay" class="event-date-text"></p>
-            <input type="text" id="eventTitle" placeholder="Añade un título" autocomplete="off">
-            
-            <!-- Selector de Hora Personalizado -->
+            <input type="text" id="eventTitle" class="modal-input" placeholder="Añade un título" autocomplete="off">
             <div class="custom-time-wrapper">
                 <div class="time-input-box" id="timeInputBox">
                     <span id="timeDisplayTxt">Todo el día</span>
@@ -228,7 +256,6 @@
                     <div class="time-col" id="minuteList"></div>
                 </div>
             </div>
-
             <div class="color-picker" id="modalColorPicker">
                 <div class="color-option" style="background: #4285f4;" data-color="#4285f4"></div>
                 <div class="color-option" style="background: #ea4335;" data-color="#ea4335"></div>
@@ -274,8 +301,12 @@
         const icsFileInput = document.getElementById('icsFileInput');
         const modalColors = document.querySelectorAll('#modalColorPicker .color-option');
         const defaultColors = document.querySelectorAll('#defaultColorPicker .color-option');
+        
+        // Search Elements
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
 
-        // Variables Custom Time Picker
+        // Custom Time Picker
         const timeInputBox = document.getElementById('timeInputBox');
         const timeDisplayTxt = document.getElementById('timeDisplayTxt');
         const clearTimeBtn = document.getElementById('clearTimeBtn');
@@ -292,84 +323,85 @@
         let startOnMonday = localStorage.getItem('calendarStartMonday') !== 'false';
         let events = JSON.parse(localStorage.getItem('calendarEvents')) || {};
 
-        let currentHour = '12';
-        let currentMinute = '00';
-        let hasTimeSet = false;
-
+        let currentHour = '12'; let currentMinute = '00'; let hasTimeSet = false;
         const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
         startDaySelect.value = startOnMonday ? "1" : "0";
         startDaySelect.addEventListener('change', (e) => {
             startOnMonday = e.target.value === "1";
-            localStorage.setItem('calendarStartMonday', startOnMonday);
-            renderCalendar();
+            localStorage.setItem('calendarStartMonday', startOnMonday); renderCalendar();
         });
 
-        // Custom Time Picker Lógica
+        // Búsqueda de Eventos
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            if (!term) { searchResults.classList.remove('show'); return; }
+            
+            let matches = [];
+            for (const date in events) {
+                events[date].forEach((evt, index) => {
+                    if (evt.title.toLowerCase().includes(term)) matches.push({ date, evt, index });
+                });
+            }
+            
+            if (matches.length > 0) {
+                searchResults.innerHTML = matches.map(m => `
+                    <div class="search-item" onclick="goToEvent('${m.date}', ${m.index})">
+                        <div class="search-item-title">${m.evt.title}</div>
+                        <div class="search-item-date">${m.date} ${m.evt.time ? '- ' + m.evt.time : ''}</div>
+                    </div>
+                `).join('');
+            } else {
+                searchResults.innerHTML = '<div class="search-item"><div class="search-item-title" style="color: var(--text-muted)">No se encontraron eventos</div></div>';
+            }
+            searchResults.classList.add('show');
+        });
+
+        window.goToEvent = function(dateStr, index) {
+            const [year, month, day] = dateStr.split('-');
+            currentDate = new Date(year, month - 1, 1);
+            renderCalendar();
+            searchResults.classList.remove('show'); searchInput.value = '';
+            setTimeout(() => openActionModal(dateStr, index, events[dateStr][index]), 300);
+        };
+
+        // Custom Time Picker
         function renderTimeOptions() {
             hourList.innerHTML = ''; minuteList.innerHTML = '';
             for(let i=0; i<24; i++) {
-                let val = i.toString().padStart(2, '0');
-                let div = document.createElement('div');
+                let val = i.toString().padStart(2, '0'); let div = document.createElement('div');
                 div.className = `time-option ${(val === currentHour && hasTimeSet) ? 'selected' : ''}`;
                 div.textContent = val;
                 div.onclick = (e) => { e.stopPropagation(); currentHour = val; hasTimeSet = true; updateTimeDisplay(); renderTimeOptions(); scrollToSelected(hourList); };
                 hourList.appendChild(div);
             }
             for(let i=0; i<60; i++) {
-                let val = i.toString().padStart(2, '0');
-                let div = document.createElement('div');
+                let val = i.toString().padStart(2, '0'); let div = document.createElement('div');
                 div.className = `time-option ${(val === currentMinute && hasTimeSet) ? 'selected' : ''}`;
                 div.textContent = val;
                 div.onclick = (e) => { e.stopPropagation(); currentMinute = val; hasTimeSet = true; updateTimeDisplay(); renderTimeOptions(); scrollToSelected(minuteList); };
                 minuteList.appendChild(div);
             }
         }
-
         function updateTimeDisplay() {
-            if(hasTimeSet) {
-                timeDisplayTxt.textContent = `${currentHour}:${currentMinute}`;
-                clearTimeBtn.style.display = 'block';
-            } else {
-                timeDisplayTxt.textContent = 'Todo el día (Añadir hora)';
-                clearTimeBtn.style.display = 'none';
-            }
+            if(hasTimeSet) { timeDisplayTxt.textContent = `${currentHour}:${currentMinute}`; clearTimeBtn.style.display = 'block'; } 
+            else { timeDisplayTxt.textContent = 'Todo el día (Añadir hora)'; clearTimeBtn.style.display = 'none'; }
         }
-
         function scrollToSelected(container) {
-            setTimeout(() => {
-                const selected = container.querySelector('.selected');
-                if(selected) container.scrollTop = selected.offsetTop - container.offsetHeight/2 + selected.offsetHeight/2;
-            }, 10);
+            setTimeout(() => { const selected = container.querySelector('.selected'); if(selected) container.scrollTop = selected.offsetTop - container.offsetHeight/2 + selected.offsetHeight/2; }, 10);
         }
-
         function setTimeInPicker(timeStr) {
-            if (timeStr) {
-                hasTimeSet = true;
-                [currentHour, currentMinute] = timeStr.split(':');
-            } else {
-                hasTimeSet = false;
-                currentHour = '12'; currentMinute = '00';
-            }
-            updateTimeDisplay();
-            renderTimeOptions();
+            if (timeStr) { hasTimeSet = true; [currentHour, currentMinute] = timeStr.split(':'); } 
+            else { hasTimeSet = false; currentHour = '12'; currentMinute = '00'; }
+            updateTimeDisplay(); renderTimeOptions();
         }
-
         function getSelectedTime() { return hasTimeSet ? `${currentHour}:${currentMinute}` : ''; }
 
         timeInputBox.onclick = (e) => {
-            e.stopPropagation();
-            timeDropdown.classList.toggle('open');
-            if (timeDropdown.classList.contains('open')) {
-                if (!hasTimeSet) { currentHour = '12'; currentMinute = '00'; }
-                renderTimeOptions(); scrollToSelected(hourList); scrollToSelected(minuteList);
-            }
+            e.stopPropagation(); timeDropdown.classList.toggle('open');
+            if (timeDropdown.classList.contains('open')) { if (!hasTimeSet) { currentHour = '12'; currentMinute = '00'; } renderTimeOptions(); scrollToSelected(hourList); scrollToSelected(minuteList); }
         };
-
-        clearTimeBtn.onclick = (e) => {
-            e.stopPropagation(); hasTimeSet = false;
-            updateTimeDisplay(); renderTimeOptions(); timeDropdown.classList.remove('open');
-        };
+        clearTimeBtn.onclick = (e) => { e.stopPropagation(); hasTimeSet = false; updateTimeDisplay(); renderTimeOptions(); timeDropdown.classList.remove('open'); };
 
         function initDefaultColorPicker() {
             defaultColors.forEach(opt => {
@@ -383,63 +415,48 @@
         }
 
         function changeMonth(direction) { currentDate.setMonth(currentDate.getMonth() + direction); renderCalendar(); }
-
         document.addEventListener('keydown', (e) => {
             if (document.activeElement.tagName === 'INPUT') return;
-            if (e.key === 'ArrowLeft') changeMonth(-1);
-            else if (e.key === 'ArrowRight') changeMonth(1);
+            if (e.key === 'ArrowLeft') changeMonth(-1); else if (e.key === 'ArrowRight') changeMonth(1);
         });
 
         function renderCalendar() {
             calendar.classList.add('fade');
-            
             const daysOrder = startOnMonday ? ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] : ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
             weekdaysContainer.innerHTML = daysOrder.map(d => `<div>${d}</div>`).join('');
 
             setTimeout(() => {
                 calendar.innerHTML = '';
-                const year = currentDate.getFullYear();
-                const month = currentDate.getMonth();
+                const year = currentDate.getFullYear(); const month = currentDate.getMonth();
                 monthDisplay.textContent = `${months[month]} ${year}`;
                 
                 const firstDay = new Date(year, month, 1).getDay();
                 const adjustedFirstDay = startOnMonday ? (firstDay === 0 ? 6 : firstDay - 1) : firstDay;
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
                 const totalCellsNeeded = adjustedFirstDay + daysInMonth;
-                
                 calendar.style.gridTemplateRows = totalCellsNeeded > 35 ? 'repeat(6, 1fr)' : 'repeat(5, 1fr)';
                 
                 for (let i = 0; i < adjustedFirstDay; i++) {
-                    const emptyDiv = document.createElement('div');
-                    emptyDiv.classList.add('day', 'empty');
-                    calendar.appendChild(emptyDiv);
+                    const emptyDiv = document.createElement('div'); emptyDiv.classList.add('day', 'empty'); calendar.appendChild(emptyDiv);
                 }
-                
                 for (let i = 1; i <= daysInMonth; i++) {
-                    const dayDiv = document.createElement('div');
-                    dayDiv.classList.add('day');
+                    const dayDiv = document.createElement('div'); dayDiv.classList.add('day');
                     const dayString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                     
-                    const dayNumber = document.createElement('span');
-                    dayNumber.classList.add('day-number');
-                    dayNumber.textContent = i;
+                    const dayNumber = document.createElement('span'); dayNumber.classList.add('day-number'); dayNumber.textContent = i;
                     dayDiv.appendChild(dayNumber);
                     
                     if (events[dayString]) {
                         events[dayString].forEach((evt, index) => {
-                            const eventDiv = document.createElement('div');
-                            eventDiv.classList.add('event');
+                            const eventDiv = document.createElement('div'); eventDiv.classList.add('event');
                             eventDiv.style.backgroundColor = evt.isManualColor ? evt.color : defaultColor;
                             eventDiv.textContent = `${evt.time ? evt.time + ' ' : ''}${evt.title}`;
                             eventDiv.title = evt.title; 
-                            eventDiv.addEventListener('click', (e) => {
-                                e.stopPropagation(); openActionModal(dayString, index, evt);
-                            });
+                            eventDiv.addEventListener('click', (e) => { e.stopPropagation(); openActionModal(dayString, index, evt); });
                             dayDiv.appendChild(eventDiv);
                         });
                     }
-                    dayDiv.addEventListener('click', () => openCreateModal(dayString));
-                    calendar.appendChild(dayDiv);
+                    dayDiv.addEventListener('click', () => openCreateModal(dayString)); calendar.appendChild(dayDiv);
                 }
                 calendar.classList.remove('fade');
             }, 200);
@@ -447,48 +464,59 @@
 
         modalColors.forEach(option => {
             option.addEventListener('click', (e) => {
-                modalColors.forEach(opt => opt.classList.remove('selected'));
-                e.target.classList.add('selected'); selectedColor = e.target.getAttribute('data-color');
-                isColorManuallyPicked = true; 
+                modalColors.forEach(opt => opt.classList.remove('selected')); e.target.classList.add('selected'); 
+                selectedColor = e.target.getAttribute('data-color'); isColorManuallyPicked = true; 
             });
         });
 
         function openCreateModal(dateStr) {
-            selectedDate = dateStr; editingIndex = null;
-            modalMainTitle.textContent = "Nuevo Evento";
-            eventDateDisplay.textContent = `Fecha: ${dateStr}`;
-            eventTitle.value = ''; 
-            setTimeInPicker('');
-            isColorManuallyPicked = false; 
-            setColorSelection(defaultColor); eventModal.classList.add('show');
+            selectedDate = dateStr; editingIndex = null; modalMainTitle.textContent = "Nuevo Evento";
+            eventDateDisplay.textContent = `Fecha: ${dateStr}`; eventTitle.value = ''; setTimeInPicker('');
+            isColorManuallyPicked = false; setColorSelection(defaultColor); eventModal.classList.add('show');
+            setTimeout(() => eventTitle.focus(), 50);
         }
 
         function openActionModal(dateStr, index, evt) {
-            selectedDate = dateStr; editingIndex = index;
-            actionEventTitle.textContent = evt.title;
-            actionEventTime.textContent = evt.time ? `Hora: ${evt.time}` : 'Todo el día';
-            actionModal.classList.add('show');
+            selectedDate = dateStr; editingIndex = index; actionEventTitle.textContent = evt.title;
+            actionEventTime.textContent = evt.time ? `Hora: ${evt.time}` : 'Todo el día'; actionModal.classList.add('show');
         }
 
         function setColorSelection(hex) {
-            selectedColor = hex;
-            modalColors.forEach(opt => {
-                opt.classList.remove('selected');
-                if (opt.getAttribute('data-color') === hex) opt.classList.add('selected');
-            });
+            selectedColor = hex; modalColors.forEach(opt => { opt.classList.remove('selected'); if (opt.getAttribute('data-color') === hex) opt.classList.add('selected'); });
         }
+
+        // Exportar .ics
+        document.getElementById('exportIcsMenuBtn').addEventListener('click', () => {
+            settingsContainer.classList.remove('open');
+            let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Calendar App//ES\n";
+            for (const date in events) {
+                const cleanDate = date.replace(/-/g, '');
+                events[date].forEach(evt => {
+                    let dtStart = cleanDate; let dtEnd = cleanDate;
+                    if (evt.time) {
+                        const cleanTime = evt.time.replace(':', '') + '00';
+                        dtStart += 'T' + cleanTime; dtEnd = dtStart; 
+                    }
+                    icsContent += "BEGIN:VEVENT\n";
+                    icsContent += `DTSTART:${dtStart}\n`;
+                    if (evt.time) icsContent += `DTEND:${dtEnd}\n`;
+                    icsContent += `SUMMARY:${evt.title}\n`;
+                    icsContent += "END:VEVENT\n";
+                });
+            }
+            icsContent += "END:VCALENDAR";
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'calendario.ics'; link.click();
+        });
 
         document.getElementById('importIcsMenuBtn').addEventListener('click', () => { settingsContainer.classList.remove('open'); icsFileInput.click(); });
         icsFileInput.addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(event) { parseICSAndSave(event.target.result); icsFileInput.value = ""; };
-            reader.readAsText(file);
+            const reader = new FileReader(); reader.onload = function(event) { parseICSAndSave(event.target.result); icsFileInput.value = ""; }; reader.readAsText(file);
         });
 
         function parseICSAndSave(icsData) {
-            const lines = icsData.split(/\r\n|\n|\r/);
-            let currentEvent = null; let importedCount = 0;
+            const lines = icsData.split(/\r\n|\n|\r/); let currentEvent = null; let importedCount = 0;
             for (let line of lines) {
                 line = line.trim();
                 if (line.startsWith('BEGIN:VEVENT')) { currentEvent = {}; }
@@ -496,10 +524,7 @@
                     if (currentEvent.date && currentEvent.title) {
                         if (!events[currentEvent.date]) events[currentEvent.date] = [];
                         const exists = events[currentEvent.date].some(e => e.title === currentEvent.title && e.time === (currentEvent.time || ''));
-                        if (!exists) {
-                            events[currentEvent.date].push({ title: currentEvent.title, time: currentEvent.time || '', color: defaultColor, isManualColor: false });
-                            events[currentEvent.date].sort((a, b) => a.time.localeCompare(b.time)); importedCount++;
-                        }
+                        if (!exists) { events[currentEvent.date].push({ title: currentEvent.title, time: currentEvent.time || '', color: defaultColor, isManualColor: false }); events[currentEvent.date].sort((a, b) => a.time.localeCompare(b.time)); importedCount++; }
                     }
                     currentEvent = null;
                 } else if (currentEvent) {
@@ -508,73 +533,46 @@
                         const valuePart = line.split(':')[1];
                         if (valuePart) {
                             currentEvent.date = `${valuePart.substring(0, 4)}-${valuePart.substring(4, 6)}-${valuePart.substring(6, 8)}`;
-                            if (valuePart.includes('T')) {
-                                const tIndex = valuePart.indexOf('T');
-                                currentEvent.time = `${valuePart.substring(tIndex + 1, tIndex + 3)}:${valuePart.substring(tIndex + 3, tIndex + 5)}`;
-                            }
+                            if (valuePart.includes('T')) { const tIndex = valuePart.indexOf('T'); currentEvent.time = `${valuePart.substring(tIndex + 1, tIndex + 3)}:${valuePart.substring(tIndex + 3, tIndex + 5)}`; }
                         }
                     }
                 }
             }
-            if (importedCount > 0) { localStorage.setItem('calendarEvents', JSON.stringify(events)); renderCalendar(); alert(`¡Se han importado ${importedCount} eventos!`); }
-            else { alert('No se encontraron nuevos eventos.'); }
+            if (importedCount > 0) { localStorage.setItem('calendarEvents', JSON.stringify(events)); renderCalendar(); alert(`¡Se han importado ${importedCount} eventos!`); } else { alert('No se encontraron nuevos eventos.'); }
         }
 
-        document.getElementById('prevMonth').addEventListener('click', () => changeMonth(-1));
-        document.getElementById('nextMonth').addEventListener('click', () => changeMonth(1));
-        
         settingsBtn.addEventListener('click', (e) => { e.stopPropagation(); settingsContainer.classList.toggle('open'); });
         document.addEventListener('click', (e) => { 
             if (!settingsContainer.contains(e.target)) settingsContainer.classList.remove('open'); 
             if (!timeInputBox.contains(e.target) && !timeDropdown.contains(e.target)) timeDropdown.classList.remove('open');
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) searchResults.classList.remove('show');
         });
         
-        document.getElementById('themeToggleBtn').addEventListener('click', () => {
-            const html = document.documentElement;
-            html.getAttribute('data-theme') === 'dark' ? html.removeAttribute('data-theme') : html.setAttribute('data-theme', 'dark');
-            settingsContainer.classList.remove('open');
-        });
-
-        document.getElementById('clearAllBtn').addEventListener('click', () => {
-            if(confirm('¿Seguro que quieres eliminar todos los eventos?')) { events = {}; localStorage.removeItem('calendarEvents'); renderCalendar(); }
-            settingsContainer.classList.remove('open');
-        });
-
+        document.getElementById('themeToggleBtn').addEventListener('click', () => { const html = document.documentElement; html.getAttribute('data-theme') === 'dark' ? html.removeAttribute('data-theme') : html.setAttribute('data-theme', 'dark'); settingsContainer.classList.remove('open'); });
+        document.getElementById('clearAllBtn').addEventListener('click', () => { if(confirm('¿Seguro que quieres eliminar todos los eventos?')) { events = {}; localStorage.removeItem('calendarEvents'); renderCalendar(); } settingsContainer.classList.remove('open'); });
+        
         document.getElementById('closeActionBtn').addEventListener('click', () => actionModal.classList.remove('show'));
         document.getElementById('deleteEventBtn').addEventListener('click', () => {
-            events[selectedDate].splice(editingIndex, 1);
-            if (events[selectedDate].length === 0) delete events[selectedDate];
-            localStorage.setItem('calendarEvents', JSON.stringify(events));
-            actionModal.classList.remove('show'); renderCalendar();
+            events[selectedDate].splice(editingIndex, 1); if (events[selectedDate].length === 0) delete events[selectedDate];
+            localStorage.setItem('calendarEvents', JSON.stringify(events)); actionModal.classList.remove('show'); renderCalendar();
         });
-
         document.getElementById('editEventBtn').addEventListener('click', () => {
-            actionModal.classList.remove('show');
-            const evt = events[selectedDate][editingIndex];
-            modalMainTitle.textContent = "Editar Evento";
-            eventDateDisplay.textContent = `Fecha: ${selectedDate}`;
-            eventTitle.value = evt.title; 
-            setTimeInPicker(evt.time);
-            isColorManuallyPicked = evt.isManualColor || false;
+            actionModal.classList.remove('show'); const evt = events[selectedDate][editingIndex];
+            modalMainTitle.textContent = "Editar Evento"; eventDateDisplay.textContent = `Fecha: ${selectedDate}`;
+            eventTitle.value = evt.title; setTimeInPicker(evt.time); isColorManuallyPicked = evt.isManualColor || false;
             setColorSelection(evt.isManualColor ? evt.color : defaultColor); eventModal.classList.add('show');
         });
 
         document.getElementById('cancelBtn').addEventListener('click', () => eventModal.classList.remove('show'));
         document.getElementById('saveBtn').addEventListener('click', () => {
-            if (eventTitle.value.trim() === '') return;
-            if (!events[selectedDate]) events[selectedDate] = [];
-            
+            if (eventTitle.value.trim() === '') return; if (!events[selectedDate]) events[selectedDate] = [];
             const newEvent = { title: eventTitle.value, time: getSelectedTime(), color: selectedColor, isManualColor: isColorManuallyPicked };
-            
-            if (editingIndex !== null) events[selectedDate][editingIndex] = newEvent;
-            else events[selectedDate].push(newEvent);
-            
+            if (editingIndex !== null) events[selectedDate][editingIndex] = newEvent; else events[selectedDate].push(newEvent);
             events[selectedDate].sort((a, b) => a.time.localeCompare(b.time));
-            localStorage.setItem('calendarEvents', JSON.stringify(events));
-            eventModal.classList.remove('show'); renderCalendar();
+            localStorage.setItem('calendarEvents', JSON.stringify(events)); eventModal.classList.remove('show'); renderCalendar();
         });
 
         initDefaultColorPicker(); renderCalendar();
     </script>
 </body>
-</html
+</html>
