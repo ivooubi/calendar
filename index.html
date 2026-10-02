@@ -205,6 +205,8 @@
         .auth-msg { font-size: 0.8rem; color: var(--text-muted); min-height: 1.2em; margin-bottom: 8px; }
         .auth-actions { display: flex; gap: 10px; }
         .auth-actions button { flex: 1; }
+        .picker-dropdown.single-col.scroll { max-height: 200px; overflow-y: auto; scrollbar-width: none; }
+        .picker-dropdown.single-col.scroll::-webkit-scrollbar { display: none; }
         @media (max-width: 700px) {
             body { transform: none; width: 100vw; height: 100dvh; }
             .header { padding: 10px 12px; padding-top: calc(10px + env(safe-area-inset-top)); flex-wrap: wrap; gap: 8px; }
@@ -337,26 +339,26 @@
                 </div>
             </div>
 
-            <select id="remindSelect" class="auth-input">
-                <option value="">Sin aviso</option>
-                <option value="0">Al empezar</option>
-                <option value="5">5 minutos antes</option>
-                <option value="10">10 minutos antes</option>
-                <option value="15">15 minutos antes</option>
-                <option value="30">30 minutos antes</option>
-                <option value="60">1 hora antes</option>
-                <option value="120">2 horas antes</option>
-                <option value="1440">1 día antes</option>
-                <option value="2880">2 días antes</option>
-                <option value="10080">1 semana antes</option>
-                <option value="custom">Personalizado…</option>
-            </select>
-            <div id="remindCustom" style="display:none; gap:8px; margin-bottom:12px; align-items:center;">
-                <input type="number" id="remindNum" class="auth-input" min="1" max="999" value="1" style="margin:0; flex:1;">
-                <select id="remindUnit" class="auth-input" style="margin:0; flex:1.4;">
-                    <option value="1">minutos</option><option value="60">horas</option><option value="1440">días</option><option value="10080">semanas</option>
-                </select>
-                <span style="font-size:0.85rem; color:var(--text-muted);">antes</span>
+            <div class="custom-picker-wrapper">
+                <div class="picker-input-box" id="remindBox"><span id="remindTxt">Sin aviso</span></div>
+                <div class="picker-dropdown single-col scroll" id="remindDropdown">
+                    <div class="picker-option" data-value="">Sin aviso</div>
+                    <div class="picker-option" data-value="0">Al empezar</div>
+                    <div class="picker-option" data-value="5">5 minutos antes</div>
+                    <div class="picker-option" data-value="10">10 minutos antes</div>
+                    <div class="picker-option" data-value="15">15 minutos antes</div>
+                    <div class="picker-option" data-value="30">30 minutos antes</div>
+                    <div class="picker-option" data-value="60">1 hora antes</div>
+                    <div class="picker-option" data-value="120">2 horas antes</div>
+                    <div class="picker-option" data-value="1440">1 día antes</div>
+                    <div class="picker-option" data-value="2880">2 días antes</div>
+                    <div class="picker-option" data-value="10080">1 semana antes</div>
+                    <div class="picker-option" data-value="custom">Personalizado…</div>
+                </div>
+                <div class="picker-dropdown" id="remindCustomDropdown">
+                    <div class="picker-col" id="remindNumList"></div>
+                    <div class="picker-col" id="remindUnitList"></div>
+                </div>
             </div>
 
             <div class="color-picker" id="modalColorPicker">
@@ -494,6 +496,7 @@
             dimPastDropdown.classList.remove('open');
             timeDropdown.classList.remove('open');
             hdrDateDropdown.classList.remove('open');
+            if (typeof remindDropdown !== 'undefined') { remindDropdown.classList.remove('open'); remindCustomDropdown.classList.remove('open'); }
         }
 
         const norm = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -824,6 +827,7 @@
             if (!dateFormatBox.contains(e.target)) dateFormatDropdown.classList.remove('open');
             if (!startDayBox.contains(e.target)) startDayDropdown.classList.remove('open');
             if (!dimPastBox.contains(e.target)) dimPastDropdown.classList.remove('open');
+            if (!remindBox.contains(e.target) && !remindDropdown.contains(e.target) && !remindCustomDropdown.contains(e.target)) { remindDropdown.classList.remove('open'); remindCustomDropdown.classList.remove('open'); }
         });
         
         document.getElementById('themeToggleBtn').addEventListener('click', () => { const html = document.documentElement; html.getAttribute('data-theme') === 'dark' ? html.removeAttribute('data-theme') : html.setAttribute('data-theme', 'dark'); try { localStorage.setItem('calendarTheme', html.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'); } catch (e) {} settingsContainer.classList.remove('open'); });
@@ -855,29 +859,73 @@
         const SUPABASE_KEY = 'sb_publishable_jsR7sZZW61ueo1AnnTz36A_3xGqaCvU';
         const VAPID_PUBLIC_KEY = 'BBnONcWCvozGHrigQQXfRw6bu0HQtDpIygjP4nehXgJbFC3ptlzYVogaO1-92xsUwuf_LjGqracfNTsxNNJ2xwg'; // se rellena en el paso de notificaciones push
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const remindSelect = document.getElementById('remindSelect');
         const authModal = document.getElementById('authModal'), authMsg = document.getElementById('authMsg');
         const authEmail = document.getElementById('authEmail'), authPass = document.getElementById('authPass');
         let defaultRemind = '10', session = null;
 
         try { if (localStorage.getItem('calendarTheme') === 'light') document.documentElement.removeAttribute('data-theme'); } catch (e) {}
 
-        const remindCustom = document.getElementById('remindCustom'), remindNum = document.getElementById('remindNum'), remindUnit = document.getElementById('remindUnit');
-        remindSelect.addEventListener('change', () => { remindCustom.style.display = remindSelect.value === 'custom' ? 'flex' : 'none'; });
-        function getRemind() {
-            if (remindSelect.value === '') return null;
-            if (remindSelect.value === 'custom') return Math.max(1, parseInt(remindNum.value, 10) || 1) * parseInt(remindUnit.value, 10);
-            return parseInt(remindSelect.value, 10);
+        const remindBox = document.getElementById('remindBox'), remindTxt = document.getElementById('remindTxt');
+        const remindDropdown = document.getElementById('remindDropdown'), remindCustomDropdown = document.getElementById('remindCustomDropdown');
+        const remindNumList = document.getElementById('remindNumList'), remindUnitList = document.getElementById('remindUnitList');
+        const REMIND_UNITS = [[1, 'minuto', 'minutos'], [60, 'hora', 'horas'], [1440, 'día', 'días'], [10080, 'semana', 'semanas']];
+        const presetVals = [...remindDropdown.querySelectorAll('.picker-option')].map(o => o.dataset.value).filter(v => v !== '' && v !== 'custom').map(Number);
+        let remindMinutes = null, cNum = 1, cUnit = 1;
+
+        function splitMinutes(v) { const u = [10080, 1440, 60, 1].find(x => v % x === 0); return [v / u, u]; }
+        function remindLabel(v) {
+            if (v === null) return 'Sin aviso';
+            if (v === 0) return 'Al empezar';
+            const [n, u] = splitMinutes(v); const un = REMIND_UNITS.find(x => x[0] === u);
+            return `${n} ${n === 1 ? un[1] : un[2]} antes`;
         }
-        function setRemind(v) {
-            if (v === null || v === undefined || isNaN(v)) remindSelect.value = '';
-            else if ([...remindSelect.options].some(o => o.value === String(v))) remindSelect.value = String(v);
-            else {
-                remindSelect.value = 'custom';
-                const u = [10080, 1440, 60, 1].find(x => v % x === 0);
-                remindUnit.value = String(u); remindNum.value = v / u;
+        function updateRemindUI() {
+            remindTxt.textContent = remindLabel(remindMinutes);
+            const isCustom = remindMinutes !== null && !presetVals.includes(remindMinutes);
+            remindDropdown.querySelectorAll('.picker-option').forEach(o => {
+                const v = o.dataset.value;
+                o.classList.toggle('selected', v === 'custom' ? isCustom : (v === '' ? remindMinutes === null : String(remindMinutes) === v));
+            });
+        }
+        function renderCustomRemind() {
+            remindNumList.innerHTML = ''; remindUnitList.innerHTML = '';
+            for (let i = 1; i <= 99; i++) {
+                const d = document.createElement('div'); d.className = 'picker-option' + (i === cNum ? ' selected' : ''); d.textContent = i;
+                d.onclick = e => { e.stopPropagation(); cNum = i; remindMinutes = cNum * cUnit; updateRemindUI(); renderCustomRemind(); scrollToSelected(remindNumList); };
+                remindNumList.appendChild(d);
             }
-            remindSelect.dispatchEvent(new Event('change'));
+            REMIND_UNITS.forEach(([u, one, many]) => {
+                const d = document.createElement('div'); d.className = 'picker-option' + (u === cUnit ? ' selected' : ''); d.textContent = many;
+                d.onclick = e => { e.stopPropagation(); cUnit = u; remindMinutes = cNum * cUnit; updateRemindUI(); renderCustomRemind(); };
+                remindUnitList.appendChild(d);
+            });
+        }
+        remindBox.onclick = e => {
+            e.stopPropagation();
+            const open = remindDropdown.classList.contains('open') || remindCustomDropdown.classList.contains('open');
+            closeAllDropdowns();
+            if (!open) { remindDropdown.classList.add('open'); scrollToSelected(remindDropdown); }
+        };
+        remindDropdown.querySelectorAll('.picker-option').forEach(o => {
+            o.onclick = e => {
+                e.stopPropagation();
+                const v = o.dataset.value;
+                if (v === 'custom') {
+                    if (remindMinutes === null || presetVals.includes(remindMinutes)) { cNum = 1; cUnit = 60; }
+                    remindMinutes = cNum * cUnit; updateRemindUI(); renderCustomRemind();
+                    remindDropdown.classList.remove('open'); remindCustomDropdown.classList.add('open');
+                    scrollToSelected(remindNumList);
+                } else {
+                    remindMinutes = v === '' ? null : parseInt(v, 10); updateRemindUI(); remindDropdown.classList.remove('open');
+                }
+            };
+        });
+        function getRemind() { return remindMinutes; }
+        function setRemind(v) {
+            remindMinutes = (v === null || v === undefined || isNaN(v)) ? null : v;
+            if (remindMinutes !== null && !presetVals.includes(remindMinutes)) [cNum, cUnit] = splitMinutes(remindMinutes);
+            remindDropdown.classList.remove('open'); remindCustomDropdown.classList.remove('open');
+            updateRemindUI();
         }
 
         async function loadEvents() {
