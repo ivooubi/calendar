@@ -339,12 +339,25 @@
 
             <select id="remindSelect" class="auth-input">
                 <option value="">Sin aviso</option>
-                <option value="0">Avisar al empezar</option>
+                <option value="0">Al empezar</option>
+                <option value="5">5 minutos antes</option>
                 <option value="10">10 minutos antes</option>
+                <option value="15">15 minutos antes</option>
                 <option value="30">30 minutos antes</option>
                 <option value="60">1 hora antes</option>
+                <option value="120">2 horas antes</option>
                 <option value="1440">1 día antes</option>
+                <option value="2880">2 días antes</option>
+                <option value="10080">1 semana antes</option>
+                <option value="custom">Personalizado…</option>
             </select>
+            <div id="remindCustom" style="display:none; gap:8px; margin-bottom:12px; align-items:center;">
+                <input type="number" id="remindNum" class="auth-input" min="1" max="999" value="1" style="margin:0; flex:1;">
+                <select id="remindUnit" class="auth-input" style="margin:0; flex:1.4;">
+                    <option value="1">minutos</option><option value="60">horas</option><option value="1440">días</option><option value="10080">semanas</option>
+                </select>
+                <span style="font-size:0.85rem; color:var(--text-muted);">antes</span>
+            </div>
 
             <div class="color-picker" id="modalColorPicker">
                 <div class="color-option" style="background: #4285f4;" data-color="#4285f4"></div>
@@ -733,7 +746,7 @@
         function openCreateModal(dateStr) {
             originalDate = dateStr; selectedDate = dateStr; editingIndex = null; modalMainTitle.textContent = "Nuevo Evento";
             eventTitle.value = ''; setTimeInPicker('');
-            isColorManuallyPicked = false; setColorSelection(defaultColor); remindSelect.value = defaultRemind; eventModal.classList.add('show');
+            isColorManuallyPicked = false; setColorSelection(defaultColor); setRemind(parseInt(defaultRemind, 10)); eventModal.classList.add('show');
             setTimeout(() => eventTitle.focus(), 50);
         }
 
@@ -824,14 +837,14 @@
             actionModal.classList.remove('show'); const evt = events[originalDate][editingIndex];
             modalMainTitle.textContent = "Editar Evento"; 
             eventTitle.value = evt.title; setTimeInPicker(evt.time); isColorManuallyPicked = evt.isManualColor || false;
-            setColorSelection(evt.isManualColor ? evt.color : defaultColor); remindSelect.value = evt.remind ?? ''; eventModal.classList.add('show');
+            setColorSelection(evt.isManualColor ? evt.color : defaultColor); setRemind(evt.remind); eventModal.classList.add('show');
         });
 
         document.getElementById('cancelBtn').addEventListener('click', () => eventModal.classList.remove('show'));
         document.getElementById('saveBtn').addEventListener('click', async () => {
             const title = eventTitle.value.trim(); if (!title) return;
             const row = { title, event_date: selectedDate, event_time: getSelectedTime() || null, color: selectedColor, is_manual_color: isColorManuallyPicked,
-                          remind_minutes_before: remindSelect.value === '' ? null : parseInt(remindSelect.value, 10) };
+                          remind_minutes_before: getRemind() };
             const editing = editingIndex !== null ? events[originalDate][editingIndex] : null;
             eventModal.classList.remove('show');
             await saveEvent(row, editing ? editing.id : null);
@@ -840,7 +853,7 @@
         /* ================= SUPABASE ================= */
         const SUPABASE_URL = 'https://vqkkirkblhugtutxquyd.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_jsR7sZZW61ueo1AnnTz36A_3xGqaCvU';
-        const VAPID_PUBLIC_KEY = ''; // se rellena en el paso de notificaciones push
+        const VAPID_PUBLIC_KEY = 'BBnONcWCvozGHrigQQXfRw6bu0HQtDpIygjP4nehXgJbFC3ptlzYVogaO1-92xsUwuf_LjGqracfNTsxNNJ2xwg'; // se rellena en el paso de notificaciones push
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const remindSelect = document.getElementById('remindSelect');
         const authModal = document.getElementById('authModal'), authMsg = document.getElementById('authMsg');
@@ -848,6 +861,24 @@
         let defaultRemind = '10', session = null;
 
         try { if (localStorage.getItem('calendarTheme') === 'light') document.documentElement.removeAttribute('data-theme'); } catch (e) {}
+
+        const remindCustom = document.getElementById('remindCustom'), remindNum = document.getElementById('remindNum'), remindUnit = document.getElementById('remindUnit');
+        remindSelect.addEventListener('change', () => { remindCustom.style.display = remindSelect.value === 'custom' ? 'flex' : 'none'; });
+        function getRemind() {
+            if (remindSelect.value === '') return null;
+            if (remindSelect.value === 'custom') return Math.max(1, parseInt(remindNum.value, 10) || 1) * parseInt(remindUnit.value, 10);
+            return parseInt(remindSelect.value, 10);
+        }
+        function setRemind(v) {
+            if (v === null || v === undefined || isNaN(v)) remindSelect.value = '';
+            else if ([...remindSelect.options].some(o => o.value === String(v))) remindSelect.value = String(v);
+            else {
+                remindSelect.value = 'custom';
+                const u = [10080, 1440, 60, 1].find(x => v % x === 0);
+                remindUnit.value = String(u); remindNum.value = v / u;
+            }
+            remindSelect.dispatchEvent(new Event('change'));
+        }
 
         async function loadEvents() {
             const { data, error } = await sb.from('events').select('*').order('event_time', { ascending: true, nullsFirst: true });
