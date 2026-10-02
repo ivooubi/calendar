@@ -1,6 +1,3 @@
-
-
-
 <!DOCTYPE html>
 <html lang="es" data-theme="dark">
 <head>
@@ -882,13 +879,18 @@
         }
 
         async function migrateLocal() {
-            let old; try { old = JSON.parse(localStorage.getItem('calendarEvents') || 'null'); } catch (e) { return; }
+            const raw = localStorage.getItem('calendarEvents'); if (!raw) return;
+            let old; try { old = JSON.parse(raw); } catch (e) { return; }
             if (!old) return;
+            // Se retira ANTES de subir para que otra pestaña no lo vuelva a importar
+            localStorage.setItem('calendarEventsBackup', raw);
+            localStorage.removeItem('calendarEvents');
             const rows = [];
             for (const d in old) old[d].forEach(e => rows.push({ title: e.title, event_date: d, event_time: e.time || null, color: e.color || '#4285f4', is_manual_color: !!e.isManualColor }));
-            if (rows.length) { const { error } = await sb.from('events').insert(rows); if (error) { console.error(error); return; } }
-            localStorage.setItem('calendarEventsBackup', localStorage.getItem('calendarEvents'));
-            localStorage.removeItem('calendarEvents');
+            if (rows.length) {
+                const { error } = await sb.from('events').insert(rows);
+                if (error) { console.error(error); localStorage.setItem('calendarEvents', raw); }
+            }
         }
 
         async function setSession(s) {
