@@ -226,6 +226,30 @@
             .event { font-size: 0.65rem; padding: 2px 4px; }
             .modal-content { width: 92vw; max-width: 350px; }
         }
+.calendar-grid { min-height: 0; }
+        @media (hover: none) {
+            .day:hover { background-color: var(--surface-color); }
+            .day.empty:hover { background-color: var(--bg-color); }
+            .event:hover { transform: none; filter: none; }
+        }
+        @media (max-width: 700px) {
+            html, body { overscroll-behavior: none; }
+            body { width: 100%; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+            .search-input { font-size: 16px; }
+            .search-wrapper { padding: 6px 14px; }
+            .weekdays { font-size: 0.7rem; padding-bottom: 6px; }
+            .day-number { font-size: 0.75rem; margin-bottom: 2px; }
+            .day-number.today-circle { width: 22px; height: 22px; }
+            .calendar-grid { border-radius: 8px; }
+            .modal-content { max-height: 90dvh; overflow-y: auto; scrollbar-width: none; }
+            .modal-content.small { width: 86vw; }
+            .calendar-grid.week-view { grid-template-columns: 1fr !important; grid-template-rows: none !important; grid-auto-rows: minmax(64px, auto); overflow-y: auto; }
+            .weekdays.week-view { display: none; }
+            .calendar-grid.week-view .day { overflow-y: visible; }
+            .calendar-grid.week-view .day::before { content: attr(data-wd); font-size: 0.7rem; color: var(--text-muted); font-weight: 500; align-self: flex-start; margin-left: 6px; }
+            .calendar-grid.week-view .day-number { align-self: flex-start; margin-left: 6px; }
+            .calendar-grid.week-view .event, .calendar-grid.day-view .event { font-size: 0.85rem; padding: 6px 8px; }
+        }
         @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     </style>
 </head>
@@ -653,6 +677,7 @@
             calendar.classList.add('fade');
             setTimeout(() => {
                 calendar.innerHTML = '';
+                calendar.classList.toggle('week-view', currentView === 'week'); calendar.classList.toggle('day-view', currentView === 'day'); weekdaysContainer.classList.toggle('week-view', currentView === 'week');
                 const year = currentDate.getFullYear(); const month = currentDate.getMonth(); const date = currentDate.getDate();
                 const dayOfWeek = currentDate.getDay();
                 const daysOrder = startOnMonday ? ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] : ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -707,11 +732,12 @@
                 const now = new Date();
                 const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-                daysToRender.forEach(item => {
+                daysToRender.forEach((item, idx) => {
                     const dayDiv = document.createElement('div');
                     if (item.empty) { dayDiv.classList.add('day', 'empty'); calendar.appendChild(dayDiv); return; }
                     
                     dayDiv.classList.add('day');
+                    if (currentView === 'week') dayDiv.dataset.wd = daysOrder[idx];
                     const y = item.dateObj.getFullYear(), m = item.dateObj.getMonth() + 1, d = item.dateObj.getDate();
                     const dayString = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                     
@@ -1047,6 +1073,14 @@
             if (e.key === 'Enter' && eventModal.classList.contains('show') && document.activeElement === eventTitle) document.getElementById('saveBtn').click();
         });
         [eventModal, actionModal].forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); }));
+
+        /* Deslizar para cambiar de mes / semana / día (móvil) */
+        let tx = 0, ty = 0;
+        calendar.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+        calendar.addEventListener('touchend', e => {
+            const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+            if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 2 && !document.querySelector('.modal.show')) navigateCalendar(dx < 0 ? 1 : -1);
+        }, { passive: true });
 
         (async () => { const { data } = await sb.auth.getSession(); await setSession(data.session); sb.auth.onAuthStateChange((_e, sess) => setSession(sess)); })();
 
